@@ -1,17 +1,11 @@
 const canvas = document.getElementById("circleCanvas");
 const context = canvas.getContext("2d");
 
-class BlackHole {
+class Entity {
   #radius;
   #mass;
 
-  constructor(name) {
-    this.name = name;
-    this.angularSpeed = 0.001;
-    this.angle = 0;
-    this.x = canvas.width / 2;
-    this.y = canvas.height / 2;
-  }
+  constructor() {}
 
   setRadius(newRadius) {
     this.#radius = newRadius;
@@ -28,11 +22,24 @@ class BlackHole {
   getMass() {
     return this.#mass;
   }
+}
+
+class BlackHole extends Entity {
+  constructor(name) {
+    super();
+    this.name = name;
+    this.angularSpeed = 0.001;
+    this.angle = 0;
+    this.x = canvas.width / 2;
+    this.y = canvas.height / 2;
+
+    this.createBlackHole();
+  }
 
   createBlackHole() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.beginPath();
-    context.arc(this.x, this.y, this.#radius, 0, 2 * Math.PI);
+    context.arc(this.x, this.y, this.getRadius(), 0, 2 * Math.PI);
     context.fillStyle = "black";
     context.fill();
     context.closePath();
@@ -46,11 +53,9 @@ class BlackHole {
   }
 }
 
-class Star {
-  #radius;
-  #mass;
-
+class Star extends Entity {
   constructor(name, speed, distanceBlackHole) {
+    super();
     this.name = name;
     this.speedOwnAxis = speed;
     this.distanceFromBlackHole = distanceBlackHole;
@@ -63,25 +68,9 @@ class Star {
     this.createStar();
   }
 
-  setRadius(newRadius) {
-    this.#radius = newRadius;
-  }
-
-  getRadius() {
-    return this.#radius;
-  }
-
-  setMass(newMass) {
-    this.#mass = newMass;
-  }
-
-  getMass() {
-    return this.#mass;
-  }
-
   createStar() {
     context.beginPath();
-    context.arc(this.x, this.y, this.#radius, 0, 2 * Math.PI);
+    context.arc(this.x, this.y, this.getRadius(), 0, 2 * Math.PI);
     context.fillStyle = this.color;
     context.fill();
     context.closePath();
@@ -92,8 +81,8 @@ class Star {
     context.textBaseline = "middle";
     context.fillText(this.name, this.x, this.y);
 
-    const dotX = this.x + Math.cos(this.angleOwnAxis) * (this.#radius - 15);
-    const dotY = this.y + Math.sin(this.angleOwnAxis) * (this.#radius - 15);
+    const dotX = this.x + Math.cos(this.angleOwnAxis) * (this.getRadius() - 15);
+    const dotY = this.y + Math.sin(this.angleOwnAxis) * (this.getRadius() - 15);
 
     context.beginPath();
     context.arc(dotX, dotY, 3, 0, 2 * Math.PI);
@@ -112,11 +101,9 @@ class Star {
   }
 }
 
-class Planet {
-  #radius;
-  #mass;
-
+class Planet extends Entity {
   constructor(name, color, speed, speedAroundSun, distanceSun, trajectory, sun) {
+    super();
     this.name = name;
     this.color = color;
     this.speedOwnAxis = speed;
@@ -127,27 +114,13 @@ class Planet {
     this.angleOwnAxis = 0;
     this.trajectory = trajectory;
     this.sun = sun;
-  }
 
-  setRadius(newRadius) {
-    this.#radius = newRadius;
-  }
-
-  getRadius() {
-    return this.#radius;
-  }
-
-  setMass(newMass) {
-    this.#mass = newMass;
-  }
-
-  getMass() {
-    return this.#mass;
+    this.createPlanet();
   }
 
   createPlanet() {
     context.beginPath();
-    context.arc(this.x, this.y, this.#radius, 0, 2 * Math.PI);
+    context.arc(this.x, this.y, this.getRadius(), 0, 2 * Math.PI);
     context.fillStyle = this.color;
     context.fill();
     context.closePath();
@@ -159,8 +132,8 @@ class Planet {
     context.fillText(this.name, this.x, this.y);
 
     // Calculate the position of the dot for self-rotation around its own axis
-    const dotX = this.x + Math.cos(this.angleOwnAxis) * this.#radius;
-    const dotY = this.y + Math.sin(this.angleOwnAxis) * this.#radius;
+    const dotX = this.x + Math.cos(this.angleOwnAxis) * this.getRadius();
+    const dotY = this.y + Math.sin(this.angleOwnAxis) * this.getRadius();
 
     // Draw the dot for self-rotation
     context.beginPath();
@@ -172,7 +145,6 @@ class Planet {
 
   rotateAroundAxis() {
     this.angleOwnAxis += this.speedOwnAxis * 0.01;
-    this.createPlanet();
     requestAnimationFrame(this.rotateAroundAxis.bind(this));
   }
 
@@ -180,7 +152,6 @@ class Planet {
     const angle = this.angleOwnAxis + this.distanceFromSun * (2 * Math.PI);
     this.x = this.sun.x + Math.cos(angle) * this.distanceFromSun;
     this.y = this.sun.y + Math.sin(angle) * this.distanceFromSun;
-    this.createPlanet();
     requestAnimationFrame(this.rotateAroundSun.bind(this));
   }
 }
@@ -222,15 +193,11 @@ class SolarSystem {
   }
 
   rotateAroundStar(star, centerX, centerY, radius) {
-    const blackHole = this.blackHole;
-
     const animate = () => {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      blackHole.createBlackHole();
       const angle = star.angleOwnAxis + (star.distanceFromBlackHole / radius) * (2 * Math.PI);
       star.x = centerX + Math.cos(angle) * star.distanceFromBlackHole;
       star.y = centerY + Math.sin(angle) * star.distanceFromBlackHole;
-      star.createStar();
       requestAnimationFrame(animate);
     };
 
@@ -238,16 +205,10 @@ class SolarSystem {
   }
 
   rotatePlanets() {
-    const blackHole = this.blackHole;
-    const sun = this.sun;
-
     const animate = () => {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      blackHole.createBlackHole();
-      sun.createStar();
       for (let i = 0; i < this.planets.length; i++) {
         const planet = this.planets[i];
-        planet.createPlanet();
         planet.rotateAroundAxis();
         planet.rotateAroundSun();
       }

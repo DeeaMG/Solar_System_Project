@@ -59,6 +59,8 @@ class Star {
     this.angleOwnAxis = 0;
     this.x = canvas.width / 2;
     this.y = canvas.height / 2;
+
+    this.createStar();
   }
 
   setRadius(newRadius) {
@@ -106,8 +108,6 @@ class Star {
     const angle = this.angleOwnAxis + (this.distanceFromBlackHole / 100) * (2 * Math.PI);
     this.x = canvas.width / 2 + Math.cos(angle) * this.distanceFromBlackHole;
     this.y = canvas.height / 2 + Math.sin(angle) * this.distanceFromBlackHole;
-    // this.blackHole.createBlackHole();
-    this.createStar();
     requestAnimationFrame(this.rotateAroundOwnAxis.bind(this));
   }
 }
